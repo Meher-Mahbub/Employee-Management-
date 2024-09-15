@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Employee</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/styles.css') }}">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+
+<body>
+    <div class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('show_employees') }}">Home</a></li>
+            <li><a href="#">Employees</a></li>
+            <li><a href="{{ url_for('add_employee') }}">Add Employee</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <h1>Add Employee</h1>
+        <form method="POST" action="{{ url_for('add_employee') }}" enctype="multipart/form-data">
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" required>
+            <br>
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required>
+            <br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <br>
+            <label for="mobile">Mobile:</label>
+            <input type="text" id="mobile" name="mobile" required>
+            <br>
+            <label for="dob">Date of Birth:</label>
+            <input type="text" id="dob" name="dob" required>
+            <br>
+            <label for="photo">Photo:</label>
+            <input type="file" id="photo" name="photo">
+            <br>
+            <button type="submit">Add Employee</button>
+        </form>
+    </div>
+
+    
+    <script>
+        flatpickr("#dob", {
+            dateFormat: "Y-m-d"
+        });
+    </script>
+</body>
+
+</html>
