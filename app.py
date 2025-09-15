@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import sqlite3
+import pymysql
 import os
 from werkzeug.utils import secure_filename
 
@@ -11,7 +11,7 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
 ITEMS_PER_PAGE = 10
 
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    conn = pymysql.connect(host='localhost', user='your_mysql_username', password='your_mysql_password', database='employee_db')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -32,19 +32,19 @@ def show_employees(page=1):
     params = []
 
     if search_name:
-        query += ' AND (first_name LIKE ? OR last_name LIKE ?)'
+        query += ' AND (first_name LIKE %s OR last_name LIKE %s)'
         params.extend([f'%{search_name}%', f'%{search_name}%'])
     if search_dob:
-        query += ' AND dob LIKE ?'
+        query += ' AND dob LIKE %s'
         params.append(f'%{search_dob}%')
     if search_email:
-        query += ' AND email LIKE ?'
+        query += ' AND email LIKE %s'
         params.append(f'%{search_email}%')
     if search_mobile:
-        query += ' AND mobile LIKE ?'
+        query += ' AND mobile LIKE %s'
         params.append(f'%{search_mobile}%')
     
-    query += ' LIMIT ? OFFSET ?'
+    query += ' LIMIT %s OFFSET %s'
     params.extend([ITEMS_PER_PAGE, (page - 1) * ITEMS_PER_PAGE])
 
     employees = conn.execute(query, params).fetchall()
@@ -72,7 +72,7 @@ def add_employee():
             filename = None
         
         conn = get_db_connection()
-        conn.execute('INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (?, ?, ?, ?, ?, ?)',
+        conn.execute('INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (%s, %s, %s, %s, %s, %s)',
                      (first_name, last_name, email, mobile, dob, filename))
         conn.commit()
         conn.close()
@@ -84,7 +84,7 @@ def add_employee():
 @app.route('/edit_employee/<int:id>', methods=['GET', 'POST'])
 def edit_employee(id):
     conn = get_db_connection()
-    employee = conn.execute('SELECT * FROM employees WHERE id = ?', (id,)).fetchone()
+    employee = conn.execute('SELECT * FROM employees WHERE id = %s', (id,)).fetchone()
     
     if request.method == 'POST':
         first_name = request.form['first_name']
@@ -100,7 +100,7 @@ def edit_employee(id):
         else:
             filename = employee['photo']
         
-        conn.execute('UPDATE employees SET first_name = ?, last_name = ?, email = ?, mobile = ?, dob = ?, photo = ? WHERE id = ?',
+        conn.execute('UPDATE employees SET first_name = %s, last_name = %s, email = %s, mobile = %s, dob = %s, photo = %s WHERE id = %s',
                      (first_name, last_name, email, mobile, dob, filename, id))
         conn.commit()
         conn.close()
@@ -112,14 +112,14 @@ def edit_employee(id):
 @app.route('/delete_employee/<int:id>', methods=['POST'])
 def delete_employee(id):
     conn = get_db_connection()
-    employee = conn.execute('SELECT photo FROM employees WHERE id = ?', (id,)).fetchone()
+    employee = conn.execute('SELECT photo FROM employees WHERE id = %s', (id,)).fetchone()
     
     if employee is None:
         flash('Employee not found!')
         conn.close()
         return redirect(url_for('show_employees'))
     
-    conn.execute('DELETE FROM employees WHERE id = ?', (id,))
+    conn.execute('DELETE FROM employees WHERE id = %s', (id,))
     conn.commit()
     
     file_path = os.path.join(UPLOAD_FOLDER, employee['photo']) if employee['photo'] else None
@@ -146,10 +146,10 @@ if __name__ == '__main__':
             photo TEXT)
     ''')
     
-    conn.execute("INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (?, ?, ?, ?, ?, ?)", 
+    conn.execute("INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (%s, %s, %s, %s, %s, %s)", 
                  ('Abul', 'Kalam', 'Abul@example.com', '1234567890', '1980-01-01', None))
     
-    conn.execute("INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (?, ?, ?, ?, ?, ?)", 
+    conn.execute("INSERT INTO employees (first_name, last_name, email, mobile, dob, photo) VALUES (%s, %s, %s, %s, %s, %s)", 
                  ('Tanim', 'Shahriar', 'tanim.shahriar@example.com', '0987654321', '1990-05-15', None))
     
     conn.commit()
